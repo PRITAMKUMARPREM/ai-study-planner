@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Planner | Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        display: ['"Space Grotesk"', 'sans-serif'],
+                    },
+                    colors: {
+                        bgMain: '#0F0F13', // Deep black-gray
+                        cardBg: '#1A1A24', // Slightly lighter gray for cards
+                        brandViolet: '#8A2BE2', // Main vibrant violet
+                        brandVioletLight: '#B084FF',
+                        brandVioletDark: '#4A0E8F',
+                        brandGray: '#2A2A35', // Borders and secondary backgrounds
+                        textMain: '#FFFFFF', // White text
+                        textMuted: '#A0A0B0', // Light gray text for secondary
+                        accentTeal: '#00E5FF' // Minor accent for contrast
+                    },
+                    boxShadow: {
+                        'soft-xl': '0px 18px 40px rgba(0, 0, 0, 0.4)',
+                        'glow-violet': '0px 0px 30px rgba(138, 43, 226, 0.4)',
+                        'glow-subtle': '0px 0px 20px rgba(138, 43, 226, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0F0F13;
+            overflow: hidden;
+            color: #FFFFFF;
+        }
+
+        /* Dark scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2A2A35;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #8A2BE2;
+        }
+
+        /* Dark glass panel */
+        .glass-panel {
+            background: rgba(26, 26, 36, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #B084FF, #00E5FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Dark bubbly card */
+        .card-bubbly {
+            border-radius: 30px;
+            background-color: #1A1A24;
+            border: 1px solid #2A2A35;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .card-bubbly:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 15px 40px rgba(138, 43, 226, 0.15);
+            border-color: rgba(138, 43, 226, 0.4);
+        }
+
+        /* Animated background blob */
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.5;
+            animation: moveBlob 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes moveBlob {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(100px, 50px) scale(1.2);
+            }
+        }
+    </style>
+</head>
+
+<body class="text-textMain font-sans flex h-screen relative">
+
+    <!-- Decorative Background blobs -->
+    <div class="bg-blob bg-[#4318FF] w-[500px] h-[500px] top-[-200px] left-[-200px]"></div>
+    <div class="bg-blob bg-[#FF00A6] w-[400px] h-[400px] bottom-[-100px] right-[-100px]" style="animation-delay: -5s">
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside
+        class="w-72 bg-cardBg/80 backdrop-blur-xl border-r border-brandGray/40 flex flex-col justify-between hidden md:flex z-20 m-4 rounded-[40px] shadow-soft-xl">
+        <div class="p-8">
+            <div class="flex items-center justify-center mb-10">
+                <div
+                    class="w-12 h-12 rounded-[20px] bg-gradient-to-br from-brandPurple to-brandPink flex items-center justify-center shadow-glow-violet mr-4">
+                    <i class="fa-solid fa-brain text-white text-2xl"></i>
+                </div>
+                <span class="text-3xl font-display font-bold tracking-tight text-textMain">Study<span
+                        class="text-brandViolet">AI</span></span>
+            </div>
+
+            <nav class="space-y-3">
+                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard"
+                    class="flex items-center px-5 py-4 text-base font-bold rounded-[20px] bg-brandViolet text-white shadow-glow-violet relative overflow-hidden group nav-item">
+                    <div
+                        class="absolute inset-0 bg-cardBg/20 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300">
+                    </div>
+                    <i class="fa-solid fa-house w-6 mr-4 relative z-10 text-xl"></i>
+                    <span class="relative z-10">Dashboard</span>
+                </a>
+
+                <a href="#" onclick="switchTab('planner')" id="nav-planner"
+                    class="flex items-center px-5 py-4 text-base font-bold rounded-[20px] text-textMuted hover:bg-bgMain hover:text-brandViolet transition-colors nav-item">
+                    <i class="fa-solid fa-calendar-days w-6 mr-4 text-xl"></i> Smart Planner
+                </a>
+
+                <a href="#" onclick="switchTab('tutor')" id="nav-tutor"
+                    class="flex items-center px-5 py-4 text-base font-bold rounded-[20px] text-textMuted hover:bg-bgMain hover:text-brandViolet transition-colors justify-between nav-item">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-robot w-6 mr-4 text-xl"></i> AI Tutor
+                    </div>
+                    <span
+                        class="bg-[#FFECEC] text-brandPink text-xs font-black px-3 py-1 rounded-full border border-[#FFD1D1]">PRO</span>
+                </a>
+
+                <a href="#" onclick="switchTab('analytics')" id="nav-analytics"
+                    class="flex items-center px-5 py-4 text-base font-bold rounded-[20px] text-textMuted hover:bg-bgMain hover:text-brandViolet transition-colors nav-item">
+                    <i class="fa-solid fa-chart-pie w-6 mr-4 text-xl"></i> Analytics
+                </a>
+
+                <a href="#" onclick="switchTab('focus')" id="nav-focus"
+                    class="flex items-center px-5 py-4 text-base font-bold rounded-[20px] text-textMuted hover:bg-bgMain hover:text-brandViolet transition-colors nav-item">
+                    <i class="fa-solid fa-stopwatch w-6 mr-4 text-xl"></i> Focus Mode
+                </a>
+
+                <a href="#" onclick="switchTab('leaderboard')" id="nav-leaderboard"
+                    class="flex items-center px-5 py-4 text-base font-bold rounded-[20px] text-textMuted hover:bg-bgMain hover:text-brandViolet transition-colors nav-item">
+                    <i class="fa-solid fa-crown w-6 mr-4 text-xl"></i> Leaderboard
+                </a>
+            </nav>
+        </div>
+
+        <div
+            class="p-6 mx-4 mb-4 bg-gradient-to-br from-[#EAE6FF] to-white rounded-[30px] border border-brandGray relative overflow-hidden shadow-sm">
+            <!-- decorative circles in badge -->
+            <div class="absolute w-20 h-20 bg-brandViolet/5 rounded-full -top-4 -right-4"></div>
+            <div class="absolute w-12 h-12 bg-brandVioletLight/5 rounded-full bottom-2 -left-4"></div>
+
+            <div class="flex items-center relative z-10">
+                <img src="https://ui-avatars.com/api/?name=Pritam+Kumar+Prem&background=4318FF&color=fff&rounded=true"
+                    alt="Profile" class="w-10 h-10 shadow-sm border border-brandGray rounded-full">
+                <div class="ml-3">
+                    <p class="text-base font-black text-brandViolet drop-shadow-sm leading-tight">Pritam Kumar Prem</p>
+                    <p class="text-[10px] text-textMuted font-medium uppercase tracking-wider">Pro Plan</p>
+                </div>
+            </div>
+            <button onclick="openPremiumModal()"
+                class="mt-5 w-full bg-gradient-to-r from-brandViolet to-brandVioletLight hover:opacity-90 text-white text-sm font-bold py-3 rounded-2xl transition-all shadow-glow-violet flex items-center justify-center gap-2">
+                <i class="fa-solid fa-bolt text-yellow-300"></i> Go Premium
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+
+        <!-- Top Header Panel -->
+        <header
+            class="h-24 glass-panel m-4 rounded-[30px] flex items-center justify-between px-8 z-10 shadow-sm top-0 sticky">
+            <div class="flex items-center flex-1">
+                <button class="md:hidden mr-4 text-textMuted hover:text-brandViolet">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+                <div class="flex items-center gap-4">
+                    <h1 class="text-3xl font-display font-black text-textMain hidden sm:block">Hello, <span
+                            class="bg-gradient-to-r from-brandPurple to-brandPink bg-clip-text text-transparent">Pritam
+                            Kumar Prem!</span> 👋</h1>
+                    <h1 class="text-xl font-display font-bold text-textMain sm:hidden">Hello! 👋</h1>
+                    <p class="text-sm font-medium text-textMuted hidden sm:block mt-1">Ready to crush your goals today?
+                    </p>
+                </div>
+
+                <!-- Search -->
+                <div
+                    class="hidden md:flex ml-auto w-full max-w-sm relative items-center bg-bgMain rounded-full p-1.5 focus-within:ring-2 focus-within:ring-brandPurple/30 transition-shadow">
+                    <div
+                        class="w-10 h-10 bg-cardBg rounded-full flex items-center justify-center text-textMuted shadow-sm absolute ml-1">
+                        <i class="fa-solid fa-search"></i>
+                    </div>
+                    <input type="text" placeholder="Search..."
+                        class="w-full bg-transparent border-none py-2 pl-14 pr-4 font-medium text-textMain placeholder-[#A0A0B0] focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex items-center ml-6 gap-4">
+                <div class="relative">
+                    <button id="notificationBtn"
+                        class="w-12 h-12 bg-cardBg rounded-full text-textMuted hover:text-brandViolet shadow-sm flex items-center justify-center relative transition-colors">
+                        <i class="fa-regular fa-bell text-xl"></i>
+                        <span id="notificationDot"
+                            class="absolute top-2 right-2 w-3 h-3 bg-brandVioletLight rounded-full border-2 border-brandGray"></span>
+                    </button>
+
+                    <!-- Notification Dropdown -->
+                    <div id="notificationDropdown"
+                        class="hidden absolute right-0 mt-2 w-80 bg-cardBg border border-brandGray rounded-2xl shadow-soft-xl overflow-hidden z-20">
+                        <div class="p-4 border-b border-brandGray flex justify-between items-center">
+                            <h4 class="text-textMain font-bold">Notifications</h4>
+                            <span
+                                class="text-xs bg-brandViolet/20 text-brandViolet px-2 py-0.5 rounded-full font-bold">2
+                                New</span>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                            <!-- Notification Item 1 -->
+                            <div
+                                class="p-4 border-b border-brandGray/50 hover:bg-bgMain transition-colors cursor-pointer flex gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-brandViolet/20 text-brandViolet flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-trophy text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-textMain">You reached Gold Rank!</p>
+                                    <p class="text-xs text-textMuted mt-0.5">Your productivity score is in the top 15%.
+                                    </p>
+                                    <p class="text-[10px] text-textMuted/70 mt-1 uppercase font-bold">2 mins ago</p>
+                                </div>
+                            </div>
+                            <!-- Notification Item 2 -->
+                            <div class="p-4 hover:bg-bgMain transition-colors cursor-pointer flex gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-brandPink/20 text-brandPink flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-textMain">AI Alert: Weak Topic</p>
+                                    <p class="text-xs text-textMuted mt-0.5">Calculus III mastery dropped to 42%.</p>
+                                    <p class="text-[10px] text-textMuted/70 mt-1 uppercase font-bold">1 hour ago</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t border-brandGray text-center">
+                            <button class="text-sm text-brandViolet font-bold hover:text-white transition-colors">Mark
+                                all as read</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Views -->
+
+        <!-- View 1: Dashboard (Default) -->
+        <div id="view-dashboard" class="view-section flex-1 overflow-y-auto px-4 sm:px-8 pb-8 custom-scrollbar">
+
+            <!-- Quick Stats Row (Bubbly Cards) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-2">
+
+                <!-- Stat 1 -->
+                <div class="card-bubbly bg-cardBg p-6 flex flex-col justify-center">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-14 h-14 rounded-full bg-[#E5E9FF] flex items-center justify-center text-brandViolet text-2xl">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-textMuted">Focus Hours</p>
+                            <h3 class="text-3xl font-display font-bold text-textMain"><span
+                                    id="statFocusHours">14</span>h <span id="statFocusHoursPlus"
+                                    class="text-sm text-emerald-500 font-bold bg-emerald-50 px-2 py-0.5 rounded-md ml-1">+2h</span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 2 -->
+                <div class="card-bubbly bg-cardBg p-6 flex flex-col justify-center">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-14 h-14 rounded-full bg-[#FFF3E0] flex items-center justify-center text-brandOrange text-2xl">
+                            <i class="fa-solid fa-fire"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-textMuted">Daily Streak</p>
+                            <h3 class="text-3xl font-display font-bold text-textMain"><span
+                                    id="statDailyStreak">5</span> Days</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 3 -->
+                <div
+                    class="card-bubbly bg-gradient-to-br from-brandPurple to-[#868CFF] p-6 flex flex-col justify-center relative overflow-hidden group">
+                    <!-- Decor -->
+                    <i
+                        class="fa-solid fa-medal absolute -right-4 -bottom-4 text-7xl text-white opacity-20 group-hover:scale-110 transition-transform"></i>
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div
+                            class="w-14 h-14 rounded-full bg-cardBg/20 backdrop-blur border border-brandGray/30 flex items-center justify-center text-white text-2xl shadow-sm">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-white/80">Productivity Rank</p>
+                            <h3 class="text-3xl font-display font-bold text-white"><span
+                                    id="statProductivityRank">Gold</span> <span id="statProductivityRankTop"
+                                    class="text-sm text-yellow-300 font-black">Top 15%</span></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 4 -->
+                <div class="card-bubbly bg-cardBg p-6 flex flex-col justify-center border-2 border-[#FFD1D1]">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-brandVioletLight animate-ping absolute"></div>
+                            <div class="w-2 h-2 rounded-full bg-brandVioletLight"></div>
+                            <p class="text-sm font-bold text-brandPink">AI Alert</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 id="statAIAlertTitle" class="text-xl font-display font-bold text-textMain">2 Weak Topics
+                        </h3>
+                        <p id="statAIAlertDesc" class="text-xs font-semibold text-textMuted mt-1">Data Structures &
+                            Calculus need immediate
+                            review.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Split Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+
+                <!-- Left Column (Chart & Curriculum) -->
+                <div class="space-y-8 flex flex-col">
+
+                    <!-- Graph Card -->
+                    <div class="card-bubbly bg-cardBg p-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-display font-bold text-textMain">Weekly Performance 📈</h3>
+                            <button onclick="switchTab('analytics')"
+                                class="bg-bgMain text-brandViolet font-bold px-4 py-2 rounded-xl text-sm hover:bg-brandGray transition-colors">
+                                View Report
+                            </button>
+                        </div>
+                        <div class="h-64 w-full relative">
+                            <!-- Chart.js Canvas -->
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Modern Topic List -->
+                    <div class="card-bubbly bg-cardBg p-8 flex-1">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-display font-bold text-textMain">Curriculum Engine 🧠</h3>
+
+                            <!-- Add Subject Form Row -->
+                            <div
+                                class="flex bg-bgMain p-1.5 rounded-2xl w-full max-w-sm relative focus-within:ring-2 focus-within:ring-brandPurple/30">
+                                <input type="text" id="subjectName" placeholder="Add subject..."
+                                    class="w-full bg-transparent border-none py-2 px-4 font-bold text-sm text-textMain placeholder-[#A0A0B0] focus:outline-none">
+                                <select id="difficultyLevel"
+                                    class="bg-cardBg text-brandViolet font-bold border-none rounded-xl px-3 py-1 text-sm focus:outline-none ml-2 shadow-sm cursor-pointer">
+                                    <option value="1">Lvl 1</option>
+                                    <option value="3" selected>Lvl 3</option>
+                                    <option value="5">Lvl 5</option>
+                                </select>
+                                <button onclick="addSubject()"
+                                    class="bg-brandViolet hover:bg-[#3412cb] text-white w-10 h-10 rounded-xl flex items-center justify-center transition-colors ml-2 shadow-glow-violet shrink-0">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic List -->
+                        <div class="space-y-4" id="subjectListContainer">
+                            <!-- Populated heavily by styling JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (AI Controls) -->
+                <div class="flex flex-col h-full gap-8">
+                    <!-- The Magic Generator Card -->
+                    <div
+                        class="card-bubbly bg-gradient-to-br from-brandBlue to-brandPurple p-8 relative overflow-hidden text-white shadow-glow-violet flex flex-col justify-center">
+                        <!-- BG elements -->
+                        <div
+                            class="absolute right-0 top-0 w-40 h-40 bg-cardBg/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10">
+                        </div>
+                        <div
+                            class="absolute left-0 bottom-0 w-32 h-32 bg-brandVioletLight/30 rounded-full blur-2xl transform -translate-x-10 translate-y-10">
+                        </div>
+
+                        <div class="relative z-10 flex flex-col items-center text-center">
+                            <div
+                                class="w-16 h-16 bg-cardBg/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-3xl mb-4 border border-brandGray/30 shadow-lg">
+                                🪄
+                            </div>
+                            <h3 class="text-2xl font-display font-bold mb-2">Magic Scheduler</h3>
+                            <p class="text-indigo-100 text-sm font-medium mb-8 px-4">Let the algorithm balance your weak
+                                topics and build a perfect session.</p>
+
+                            <div
+                                class="bg-cardBg/10 backdrop-blur-md border border-brandGray/20 rounded-3xl p-4 w-full mb-6 relative">
+                                <label
+                                    class="block text-[10px] font-black tracking-widest uppercase text-indigo-100 mb-2">Hours
+                                    Available</label>
+                                <div class="flex items-center justify-center">
+                                    <button
+                                        class="w-10 h-10 rounded-full bg-cardBg/20 hover:bg-cardBg/30 flex items-center justify-center text-xl transition-colors font-bold"
+                                        onclick="document.getElementById('studyHours').stepDown()">-</button>
+                                    <input type="number" id="studyHours" value="4" min="1" max="12"
+                                        class="w-20 bg-transparent border-none text-center text-4xl font-display font-bold text-white focus:outline-none focus:ring-0 mx-2 appearance-none">
+                                    <button
+                                        class="w-10 h-10 rounded-full bg-cardBg/20 hover:bg-cardBg/30 flex items-center justify-center text-xl transition-colors font-bold"
+                                        onclick="document.getElementById('studyHours').stepUp()">+</button>
+                                </div>
+                            </div>
+
+                            <button onclick="generateAIPlan()" id="generateBtn"
+                                class="w-full bg-cardBg hover:bg-bgMain text-brandViolet font-black text-lg rounded-2xl py-4 shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                                Generate Plan ⚡️
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Smart Goal Prediction Widget -->
+                    <div
+                        class="card-bubbly bg-cardBg p-8 flex-1 flex flex-col relative overflow-hidden group border-2 border-brandGray">
+                        <!-- Decorative glow -->
+                        <div
+                            class="absolute -right-20 -bottom-20 w-40 h-40 bg-brandVioletLight/10 rounded-full blur-3xl group-hover:bg-brandVioletLight/20 transition-colors">
+                        </div>
+
+                        <div class="flex justify-between items-center mb-6 relative z-10">
+                            <div>
+                                <h3 class="text-2xl font-display font-bold text-textMain flex items-center gap-2">
+                                    Smart Prediction <i
+                                        class="fa-solid fa-wand-magic-sparkles text-brandPink text-xl animate-pulse"></i>
+                                </h3>
+                                <p class="text-xs font-bold text-textMuted uppercase tracking-wider mt-1">Based on
+                                    current pace</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col justify-center flex-1 relative z-10">
+                            <!-- Main Stat -->
+                            <div class="text-center mb-8">
+                                <div
+                                    class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-brandBlue to-[#00A3FF] shadow-glow-violet text-white mb-4">
+                                    <i class="fa-solid fa-flag-checkered text-3xl"></i>
+                                </div>
+                                <h2 class="text-4xl font-display font-black text-textMain leading-none mb-2">12 Days
+                                </h2>
+                                <p class="text-sm font-bold text-textMuted">ahead of target exam date</p>
+                            </div>
+
+                            <!-- Progress Trackers -->
+                            <div class="space-y-5 bg-bgMain p-5 rounded-3xl">
+                                <!-- Track 1 -->
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-2">
+                                        <span class="text-textMain"><i
+                                                class="fa-solid fa-code text-brandViolet mr-1"></i> Data
+                                            Structures</span>
+                                        <span class="text-emerald-500">On Track</span>
+                                    </div>
+                                    <div class="w-full bg-[#E0E5F2] h-2.5 rounded-full overflow-hidden">
+                                        <div class="bg-brandViolet h-full rounded-full w-[85%] relative">
+                                            <div
+                                                class="absolute inset-0 bg-cardBg/20 w-full animate-[pulse_2s_ease-in-out_infinite]">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Track 2 -->
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-2">
+                                        <span class="text-textMain"><i
+                                                class="fa-solid fa-square-root-variable text-brandPink mr-1"></i>
+                                            Calculus III</span>
+                                        <span class="text-brandPink">Risk Alert</span>
+                                    </div>
+                                    <div class="w-full bg-[#E0E5F2] h-2.5 rounded-full overflow-hidden">
+                                        <div class="bg-brandVioletLight h-full rounded-full w-[40%]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- End Right Column -->
+            </div> <!-- End Main Split Layout -->
+        </div> <!-- End view-dashboard -->
+
+        <!-- View 2: Smart Planner -->
+        <div id="view-planner" class="view-section hidden flex-1 overflow-y-auto px-4 sm:px-8 pb-8 custom-scrollbar">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-display font-bold text-textMain">Agenda</h2>
+                <div class="bg-bgMain rounded-xl p-1 flex">
+                    <button id="agenda-today"
+                        class="agenda-tab active px-4 py-2 bg-brandViolet text-white rounded-lg font-bold text-sm shadow-md transition-colors">Today</button>
+                    <button id="agenda-week"
+                        class="agenda-tab px-4 py-2 text-textMuted hover:text-textMain font-bold text-sm transition-colors">Week</button>
+                    <button id="agenda-month"
+                        class="agenda-tab px-4 py-2 text-textMuted hover:text-textMain font-bold text-sm transition-colors">Month</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left: Timeline -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="card-bubbly bg-cardBg p-6 sm:p-8 border-2 border-brandGray">
+                        <h3 class="text-xl font-display font-bold text-textMain mb-6 flex items-center gap-2">
+                            <i class="fa-regular fa-calendar-check text-brandViolet"></i> Today's Schedule
+                        </h3>
+
+                        <!-- Custom Timeline -->
+                        <div
+                            class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-brandGray before:to-transparent">
+
+                            <!-- Timeline Item 1 -->
+                            <div
+                                class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                                <div
+                                    class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-bgMain bg-brandVioletLight shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 text-white">
+                                    <i class="fa-solid fa-code text-xs"></i>
+                                </div>
+                                <div
+                                    class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] card-bubbly bg-bgMain p-4 border border-brandGray hover:border-brandViolet/50 transition-colors">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h4 class="font-bold text-textMain">Data Structures Lab</h4>
+                                        <span
+                                            class="text-xs font-black text-brandVioletLight bg-brandVioletLight/10 px-2 py-1 rounded-md">10:00
+                                            AM</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-textMuted">Focus on Graph Algorithms.</p>
+                                </div>
+                            </div>
+
+                            <!-- Timeline Item 2 -->
+                            <div
+                                class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                                <div
+                                    class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-bgMain bg-brandBlue shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 text-white animate-pulse">
+                                    <i class="fa-solid fa-brain text-xs"></i>
+                                </div>
+                                <div
+                                    class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] card-bubbly bg-cardBg relative overflow-hidden p-4 border-2 border-brandBlue/30 shadow-glow-subtle transition-colors">
+                                    <div class="absolute inset-0 bg-brandBlue/5 z-0"></div>
+                                    <div class="relative z-10">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <h4 class="font-bold text-white flex items-center gap-2">AI Generated
+                                                Session <i
+                                                    class="fa-solid fa-wand-magic-sparkles text-brandPink text-xs"></i>
+                                            </h4>
+                                            <span
+                                                class="text-xs font-black text-brandBlue bg-brandBlue/10 px-2 py-1 rounded-md">02:30
+                                                PM</span>
+                                        </div>
+                                        <p class="text-xs font-semibold text-white/70 mb-3">Reviewing Weak Topics:
+                                            Calculus III</p>
+                                        <button onclick="switchTab('focus')"
+                                            class="w-full bg-brandBlue hover:bg-[#00bfff] text-white text-xs font-bold py-2 rounded-xl transition-colors shadow-sm">Start
+                                            Session Now</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Timeline Item 3 -->
+                            <div
+                                class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                                <div
+                                    class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-bgMain bg-[#2A2A35] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 text-textMuted">
+                                    <i class="fa-solid fa-check text-xs"></i>
+                                </div>
+                                <div
+                                    class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] card-bubbly bg-bgMain opacity-60 p-4 border border-brandGray">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h4 class="font-bold text-textMuted line-through">Morning Reading</h4>
+                                        <span class="text-xs font-black text-textMuted px-2 py-1 rounded-md">08:00
+                                            AM</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-textMuted">Chapter 4 - Operating Systems
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Upcoming Goals -->
+                <div class="space-y-6">
+                    <div class="card-bubbly bg-cardBg p-6 border-2 border-brandGray">
+                        <h3 class="text-xl font-display font-bold text-textMain mb-4">Upcoming Deadlines</h3>
+
+                        <div class="space-y-3" id="deadlineListContainer">
+                            <div
+                                class="bg-bgMain p-4 rounded-2xl flex gap-4 items-center border border-brandGray/50 border-l-4 border-l-brandPink">
+                                <div
+                                    class="bg-cardBg w-12 h-12 rounded-xl flex flex-col items-center justify-center border border-brandGray shrink-0">
+                                    <span class="text-xs font-bold text-brandPink uppercase">Oct</span>
+                                    <span class="text-lg font-black text-textMain leading-none">12</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-textMain text-sm">Calculus Midterm</h4>
+                                    <p class="text-xs font-semibold text-textMuted">In 3 days</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-bgMain p-4 rounded-2xl flex gap-4 items-center border border-brandGray/50 border-l-4 border-l-brandOrange">
+                                <div
+                                    class="bg-cardBg w-12 h-12 rounded-xl flex flex-col items-center justify-center border border-brandGray shrink-0">
+                                    <span class="text-xs font-bold text-brandOrange uppercase">Oct</span>
+                                    <span class="text-lg font-black text-textMain leading-none">18</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-textMain text-sm">Web Dev Project Sync</h4>
+                                    <p class="text-xs font-semibold text-textMuted">In 9 days</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="toggleDeadlineForm()" id="addDeadlineBtn"
+                            class="w-full mt-4 border-2 border-dashed border-brandGray hover:bg-bgMain hover:border-brandViolet text-textMuted hover:text-brandViolet font-bold py-3 rounded-2xl transition-colors text-sm">
+                            + Add Deadline
+                        </button>
+
+                        <!-- Inline Add Deadline Form -->
+                        <div id="deadlineForm" class="hidden mt-4 bg-bgMain p-4 rounded-2xl border border-brandGray">
+                            <input type="text" id="deadlineTitle" placeholder="What's due?"
+                                class="w-full bg-cardBg border border-brandGray rounded-xl py-2 px-3 text-sm text-textMain focus:outline-none focus:border-brandViolet mb-3">
+                            <input type="date" id="deadlineDate"
+                                class="w-full bg-cardBg border border-brandGray rounded-xl py-2 px-3 text-sm text-textMuted focus:outline-none focus:border-brandViolet mb-3">
+                            <select id="deadlineColor"
+                                class="w-full bg-cardBg border border-brandGray rounded-xl py-2 px-3 text-sm text-textMuted focus:outline-none focus:border-brandViolet mb-3">
+                                <option value="brandPink">Pink (Urgent)</option>
+                                <option value="brandOrange">Orange (Warning)</option>
+                                <option value="brandBlue">Blue (Normal)</option>
+                                <option value="brandViolet">Violet (Low priority)</option>
+                            </select>
+                            <div class="flex gap-2">
+                                <button onclick="toggleDeadlineForm()"
+                                    class="flex-1 py-2 text-textMuted hover:text-white font-bold text-xs transition-colors">Cancel</button>
+                                <button onclick="addDeadline()"
+                                    class="flex-1 py-2 bg-brandViolet hover:bg-[#3412cb] text-white rounded-xl font-bold text-xs transition-colors shadow-glow-violet">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 3: AI Tutor -->
+        <div id="view-tutor" class="view-section hidden flex-1 overflow-y-auto px-4 sm:px-8 pb-8 custom-scrollbar">
+            <div class="flex flex-col items-center justify-center min-h-[calc(100vh-160px)] max-w-4xl mx-auto py-12">
+
+                <!-- Voice Orb -->
+                <div class="relative w-64 h-64 mb-12 flex items-center justify-center group cursor-pointer"
+                    onclick="openAITutorModal('listening')">
+                    <!-- Pulsating rings -->
+                    <div
+                        class="absolute inset-0 bg-brandVioletLight/20 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]">
+                    </div>
+                    <div
+                        class="absolute inset-4 bg-brandViolet/30 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]">
+                    </div>
+                    <!-- Orb Core -->
+                    <div
+                        class="w-32 h-32 bg-gradient-to-tr from-[#FF00A6] to-brandViolet rounded-full shadow-[0_0_60px_rgba(255,0,166,0.4)] flex flex-col items-center justify-center group-hover:scale-110 transition-transform duration-300 relative z-10 border-4 border-white/10 backdrop-blur-xl">
+                        <!-- Changed icon to brain as requested -->
+                        <i class="fa-solid fa-brain text-white text-4xl group-hover:animate-bounce"></i>
+                    </div>
+                </div>
+
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl md:text-5xl font-display font-black text-white mb-4 tracking-tight">I'm
+                        listening...</h2>
+                    <p class="text-textMuted font-medium text-lg">Tap the orb to speak, or choose a quick action
+                        below.</p>
+                </div>
+
+                <!-- Quick Prompts -->
+                <div class="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-4 px-4">
+                    <button onclick="openAITutorModal('explain')"
+                        class="bg-cardBg border-2 border-brandGray hover:border-brandViolet hover:shadow-glow-subtle p-5 rounded-3xl text-left transition-all group">
+                        <div
+                            class="w-10 h-10 bg-brandViolet/10 text-brandViolet rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <p
+                            class="font-bold text-textMain text-lg mb-1 group-hover:text-brandVioletLight transition-colors">
+                            Explain a Concept</p>
+                        <p class="text-sm font-semibold text-textMuted">"Explain Linked Lists like I'm five."</p>
+                    </button>
+
+                    <button onclick="openAITutorModal('quiz')"
+                        class="bg-cardBg border-2 border-brandGray hover:border-brandPink hover:shadow-glow-subtle p-5 rounded-3xl text-left transition-all group">
+                        <div
+                            class="w-10 h-10 bg-brandPink/10 text-brandPink rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-clipboard-question"></i>
+                        </div>
+                        <p class="font-bold text-textMain text-lg mb-1 group-hover:text-brandPink transition-colors">
+                            Generate Mock Quiz</p>
+                        <p class="text-sm font-semibold text-textMuted">"Test me on Calculus III derivatives."</p>
+                    </button>
+
+                    <button onclick="openAITutorModal('summarize')"
+                        class="bg-cardBg border-2 border-brandGray hover:border-brandBlue hover:shadow-glow-subtle p-5 rounded-3xl text-left transition-all group">
+                        <div
+                            class="w-10 h-10 bg-brandBlue/10 text-brandBlue rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <p class="font-bold text-textMain text-lg mb-1 group-hover:text-brandBlue transition-colors">
+                            Summarize Notes</p>
+                        <p class="text-sm font-semibold text-textMuted">Paste text and get key bullet points.</p>
+                    </button>
+
+                    <button onclick="openAITutorModal('code')"
+                        class="bg-cardBg border-2 border-brandGray hover:border-brandOrange hover:shadow-glow-subtle p-5 rounded-3xl text-left transition-all group">
+                        <div
+                            class="w-10 h-10 bg-brandOrange/10 text-brandOrange rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <p class="font-bold text-textMain text-lg mb-1 group-hover:text-brandOrange transition-colors">
+                            Code Review</p>
+                        <p class="text-sm font-semibold text-textMuted">"Help me find the bug in this function."</p>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- View 4: Analytics -->
+        <div id="view-analytics" class="view-section hidden flex-1 overflow-y-auto px-4 sm:px-8 pb-8 custom-scrollbar">
+            <h2 class="text-3xl font-display font-bold text-textMain mb-8">Analytics Dashboard</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <!-- Progress Grid -->
+                <div class="card-bubbly bg-cardBg p-6 sm:p-8 border-2 border-brandGray flex flex-col justify-center">
+                    <h3 class="text-xl font-display font-bold text-textMain mb-6">Subject Mastery</h3>
+
+                    <div class="space-y-5">
+                        <div>
+                            <div class="flex justify-between text-sm font-bold mb-2">
+                                <span class="text-textMain"><i class="fa-solid fa-code text-brandBlue w-5"></i> Web
+                                    Dev</span>
+                                <span class="text-brandBlue">92%</span>
+                            </div>
+                            <div class="w-full bg-bgMain h-3 rounded-full overflow-hidden">
+                                <div class="bg-brandBlue h-full rounded-full w-[92%] relative">
+                                    <div class="absolute inset-0 bg-white/20"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm font-bold mb-2">
+                                <span class="text-textMain"><i
+                                        class="fa-solid fa-square-root-variable text-brandVioletLight w-5"></i>
+                                    Calculus III</span>
+                                <span class="text-brandVioletLight">42%</span>
+                            </div>
+                            <div class="w-full bg-bgMain h-3 rounded-full overflow-hidden">
+                                <div class="bg-brandVioletLight h-full rounded-full w-[42%]"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm font-bold mb-2">
+                                <span class="text-textMain"><i
+                                        class="fa-solid fa-network-wired text-brandOrange w-5"></i> Data
+                                    Structures</span>
+                                <span class="text-brandOrange">35%</span>
+                            </div>
+                            <div class="w-full bg-bgMain h-3 rounded-full overflow-hidden">
+                                <div class="bg-brandOrange h-full rounded-full w-[35%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Circular Progress -->
+                <div
+                    class="card-bubbly bg-cardBg p-6 sm:p-8 border-2 border-brandGray flex flex-col items-center justify-center">
+                    <h3 class="text-xl font-display font-bold text-textMain mb-6 self-start w-full">Activity Score
+                    </h3>
+
+                    <div class="relative w-48 h-48 drop-shadow-[0_0_15px_rgba(138,43,226,0.3)]">
+                        <!-- Background Circle -->
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle class="text-bgMain stroke-current" stroke-width="12" cx="50" cy="50" r="40"
+                                fill="transparent"></circle>
+                            <!-- Gradient Stroke using SVG Linear Gradient definition could go here, simulating with valid CSS -->
+                            <circle class="text-brandViolet stroke-current transition-all duration-1000 ease-out"
+                                stroke-width="12" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent"
+                                stroke-dasharray="251.2" stroke-dashoffset="62.8"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-5xl font-display font-black text-white">75</span>
+                            <span
+                                class="text-xs font-bold text-textMuted uppercase tracking-widest mt-1">Excellent</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-bubbly bg-cardBg p-6 sm:p-8 border-2 border-brandGray relative">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-display font-bold text-textMain">Learning Heatmap</h3>
+                </div>
+
+                <!-- Loaders / Heatmap -->
+                <div id="heatmapLoading" class="hidden w-full flex-col justify-center items-center py-8">
+                    <i class="fa-solid fa-circle-notch fa-spin text-brandViolet text-3xl mb-3"></i>
+                    <p class="text-textMuted font-medium text-sm">Fetching platform data, this might take a moment...
+                    </p>
+                </div>
+
+                <div id="learningHeatmapContainer"
+                    class="w-full p-4 bg-bgMain rounded-2xl flex flex-wrap gap-2 opacity-80 min-h-[100px]">
+                    <!-- Javascript will dynamically inject the heatmap squares here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- View 5: Focus Timer -->
+        <div id="view-focus" class="view-section hidden flex-1 overflow-y-auto px-4 sm:px-8 pb-8 custom-scrollbar">
+            <div class="flex flex-col items-center justify-center min-h-[calc(100vh-160px)]">
+                <div
+                    class="card-bubbly bg-cardBg border-2 border-brandViolet/50 p-10 sm:p-16 text-center max-w-2xl w-full relative overflow-hidden group">
+                    <!-- Background glow -->
+                    <div
+                        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-brandVioletLight/10 rounded-full blur-3xl origin-center group-hover:scale-150 transition-transform duration-1000 pointer-events-none">
+                    </div>
+
+                    <div class="relative z-10">
+                        <h2 class="text-3xl font-display font-bold text-textMain mb-2">Deep Focus Zone</h2>
+                        <p class="text-textMuted font-medium mb-10 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-brandPink"></i> Distractions Blocked
+                        </p>
+
+                        <!-- Timer Display -->
+                        <div class="font-display font-black text-8xl md:text-9xl text-white tracking-widest mb-10 drop-shadow-[0_0_30px_rgba(138,43,226,0.3)] tabular-nums"
+                            id="focusTimeDisplay">
+                            45:00
+                        </div>
+
+                        <!-- Pre-configured options -->
+                        <div id="focusTimeOptions" class="flex flex-wrap justify-center gap-4 mb-10">
+                            <button onclick="setFocusTime(25)"
+                                class="px-6 py-2 rounded-xl bg-bgMain hover:bg-brandViolet/20 border border-brandGray hover:border-brandViolet text-white font-bold transition-all focus-time-btn"
+                                data-time="25">25 Min</button>
+                            <button onclick="setFocusTime(45)"
+                                class="px-6 py-2 rounded-xl bg-brandViolet text-white font-bold shadow-glow-violet transition-all focus-time-btn"
+                                data-time="45">45 Min</button>
+                            <button onclick="setFocusTime(60)"
+                                class="px-6 py-2 rounded-xl bg-bgMain hover:bg-brandViolet/20 border border-brandGray hover:border-brandViolet text-white font-bold transition-all focus-time-btn"
+                                data-time="60">60 Min</button>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-6" id="focusControls">
+                            <button id="startFocusBtn" onclick="startFocusMode()"
+                                class="px-10 py-4 bg-gradient-to-r from-brandPurple to-brandPink text-white rounded-full font-black text-xl shadow-[0_10px_30px_rgba(255,0,166,0.3)] hover:scale-105 active:scale-95 transition-transform flex items-center gap-3 w-full sm:w-auto justify-center">
+                                <i class="fa-solid fa-play"></i> Start Focusing
+                            </button>
+
+                            <button id="stopFocusBtn" onclick="stopFocusMode()"
+                                class="hidden px-10 py-4 border-2 border-brandGray text-textMuted hover:text-white hover:border-[#FF4D4D] hover:bg-[#FF4D4D]/10 rounded-full font-black text-xl transition-all flex items-center gap-3 w-full sm:w-auto justify-center">
+                                <i class="fa-solid fa-stop"></i> End Session
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explainer -->
+                <div class="mt-12 max-w-2xl text-center grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="bg-cardBg p-5 rounded-2xl border border-brandGray/50 flex items-start gap-4 text-left">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-brandPink/10 text-brandPink flex items-center justify-center shrink-0 text-lg">
+                            <i class="fa-brands fa-discord"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-sm mb-1">App Blocking</h4>
+                            <p class="text-xs text-textMuted font-medium leading-relaxed">Automatically quits
+                                distracting apps like Discord and Steam while active.</p>
+                        </div>
+                    </div>
+                    <div class="bg-cardBg p-5 rounded-2xl border border-brandGray/50 flex items-start gap-4 text-left">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-brandBlue/10 text-brandBlue flex items-center justify-center shrink-0 text-lg">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-sm mb-1">Site Blocking</h4>
+                            <p class="text-xs text-textMuted font-medium leading-relaxed">Temporarily blocks
+                                YouTube, Reddit, Instagram at a system level.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 6: Leaderboard -->
+        <div id="view-leaderboard"
+            class="view-section hidden flex-1 overflow-y-auto px-4 sm:px-8 pb-8 custom-scrollbar">
+
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 mt-2 gap-4">
+                <div>
+                    <h2 class="text-3xl font-display font-bold text-textMain flex items-center gap-3">
+                        <i class="fa-solid fa-crown text-yellow-400"></i> Leaderboard
+                    </h2>
+                    <p class="text-sm text-textMuted font-medium mt-1">XP from quizzes &amp; focus sessions — ranked
+                        live</p>
+                </div>
+                <!-- XP Guide pills -->
+                <div class="flex flex-wrap gap-2 text-[11px] font-bold">
+                    <span
+                        class="px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1"><i
+                            class="fa-solid fa-clipboard-question"></i> Quiz: 5 XP/answer</span>
+                    <span
+                        class="px-3 py-1.5 rounded-full bg-brandViolet/15 text-brandVioletLight border border-brandViolet/30 flex items-center gap-1"><i
+                            class="fa-solid fa-stopwatch"></i> Focus: 1 XP/min</span>
+                    <span
+                        class="px-3 py-1.5 rounded-full bg-yellow-400/15 text-yellow-400 border border-yellow-400/30 flex items-center gap-1"><i
+                            class="fa-solid fa-star"></i> Perfect: +10 XP</span>
+                </div>
+            </div>
+
+            <!-- Dynamic area rendered by renderLeaderboard() in script.js -->
+            <div id="leaderboard-dynamic-area" class="max-w-4xl mx-auto">
+                <!-- Loading placeholder -->
+                <div class="flex flex-col items-center justify-center py-16 text-textMuted">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-brandViolet mb-3"></i>
+                    <p class="font-medium">Loading leaderboard...</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Floating Chatbot Widget Button -->
+    <button id="chatbotTriggerBtn" onclick="toggleChatbot()"
+        class="fixed bottom-8 right-8 w-16 h-16 bg-brandVioletLight text-white rounded-full shadow-glow-pink hover:scale-110 active:scale-95 transition-transform flex items-center justify-center z-40">
+        <!-- Floating active indicator -->
+        <span
+            class="absolute top-0 right-0 w-4 h-4 bg-green-400 border-2 border-brandGray rounded-full animate-bounce"></span>
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=studyAI" class="w-10 h-10 filter invert brightness-0">
+    </button>
+
+    <!-- Floating Chatbot Window (Hidden by default) -->
+    <div id="chatbotWindow"
+        class="fixed bottom-28 right-8 w-[380px] h-[550px] bg-cardBg card-bubbly z-50 flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right scale-0 opacity-0 pointer-events-none shadow-[0_30px_60px_rgba(255,0,166,0.2)]">
+        <!-- Header -->
+        <div
+            class="p-4 bg-gradient-to-r from-brandPurple to-[#868CFF] text-white flex justify-between items-center shadow-md z-10">
+            <div class="flex items-center gap-3">
+                <div class="bg-cardBg/20 p-2 rounded-xl backdrop-blur-sm">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=studyAI" class="w-8 h-8">
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-lg leading-tight">Study Buddy AI</h3>
+                    <p class="text-xs font-medium text-indigo-100"><i
+                            class="fa-solid fa-circle text-green-300 text-[8px] mr-1"></i> Online</p>
+                </div>
+            </div>
+            <button onclick="toggleChatbot()"
+                class="w-8 h-8 hover:bg-cardBg/20 rounded-full flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="flex-1 p-5 overflow-y-auto bg-bgMain/50 flex flex-col gap-4 custom-scrollbar">
+            <!-- Bot message -->
+            <div class="flex gap-3 max-w-[85%]">
+                <div
+                    class="bg-brandViolet/10 p-4 rounded-[20px] rounded-tl-sm shadow-sm text-textMain text-sm font-medium">
+                    Hey Pritam Kumar Prem! 🌟 Ready to crush your goals today? Want me to quiz you on your weak topics?
+                </div>
+            </div>
+            <!-- User message -->
+            <div class="flex gap-3 max-w-[85%] self-end">
+                <div
+                    class="bg-brandVioletLight p-4 rounded-[20px] rounded-tr-sm shadow-glow-pink text-white text-sm font-medium">
+                    Help me summarize the concept of Trees in Data Structures.
+                </div>
+            </div>
+            <!-- Typing indicator -->
+            <div class="flex gap-3 max-w-[85%]">
+                <div class="bg-cardBg px-4 py-3 rounded-[20px] rounded-tl-sm shadow-sm flex gap-2 items-center">
+                    <div class="w-2 h-2 bg-brandPink rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-brandPink rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 bg-brandPink rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 bg-cardBg border-t border-brandGray">
+            <div
+                class="flex items-center bg-bgMain rounded-full p-1 focus-within:ring-2 focus-within:ring-brandPurple/30 transition-shadow">
+                <input type="text" id="chatbotInput" placeholder="Ask Study Buddy..."
+                    class="flex-1 bg-transparent border-none py-3 px-4 text-sm font-medium text-textMain focus:outline-none placeholder-[#A0A0B0]">
+                <button onclick="sendChatbotMessage()"
+                    class="w-10 h-10 bg-brandPurple text-white rounded-full flex items-center justify-center shrink-0 hover:bg-[#3412cb] transition-colors shadow-glow-purple">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay Loader -->
+    <div id="aiLoader"
+        class="fixed inset-0 bg-cardBg/80 backdrop-blur-md z-[100] flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div
+            class="card-bubbly bg-cardBg p-12 max-w-sm w-full mx-4 flex flex-col items-center text-center shadow-[0_20px_60px_rgba(67,24,255,0.15)] border-2 border-brandGray">
+            <!-- Fun loading animation -->
+            <div class="relative w-24 h-24 mb-6">
+                <div
+                    class="absolute inset-0 border-4 border-dashed border-brandPurple rounded-full animate-[spin_4s_linear_infinite] opacity-30">
+                </div>
+                <div class="absolute inset-2 border-4 border-brandPink border-t-transparent rounded-full animate-spin">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center text-4xl">🤖</div>
+            </div>
+
+            <h3 class="text-2xl font-display font-bold text-textMain mb-2">Crunching Data...</h3>
+            <p class="text-textMuted font-medium text-sm mb-6">Optimizing your brain cells for maximum retention!</p>
+
+            <div class="w-full bg-bgMain h-2 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-brandPurple to-brandPink h-full rounded-full animate-[pulse_1s_ease-in-out_infinite]"
+                    style="width: 70%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Notification -->
+    <div id="toast"
+        class="fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-20 opacity-0 bg-brandPink text-white px-8 py-4 rounded-full shadow-glow-pink font-bold tracking-wide flex items-center gap-3 transition-all duration-500 z-50">
+        <i class="fa-solid fa-star text-yellow-300 text-xl"></i>
+        <span id="toastMsg">Awesome job!</span>
+    </div>
+
+    <!-- Generated Schedule Modal -->
+    <div id="scheduleModal"
+        class="fixed inset-0 bg-[#2B3674]/40 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div class="card-bubbly bg-white w-full max-w-2xl overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col"
+            id="scheduleModalInner" style="max-height: 90vh;">
+
+            <!-- Modal Header -->
+            <div class="relative bg-white pt-8 px-8 pb-4 border-b border-brandGray">
+                <button onclick="closeModal()"
+                    class="absolute top-6 right-6 w-10 h-10 bg-[#F4F7FE] text-textMuted hover:text-brandPink hover:bg-pink-50 rounded-full flex items-center justify-center transition-colors font-bold text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div
+                    class="w-16 h-16 bg-green-100 text-green-500 rounded-3xl flex items-center justify-center text-3xl mb-4 shadow-sm">
+                    🎯
+                </div>
+                <h2 class="text-3xl font-display font-bold text-textMain">Your Master Plan</h2>
+                <p class="text-textMuted font-medium mt-2">Strategically built to target your weak points.</p>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-8 overflow-y-auto custom-scrollbar bg-[#F4F7FE]/50 relative flex-1">
+
+                <div id="modalScheduleContent"
+                    class="space-y-5 relative before:absolute before:left-[43px] before:top-4 before:bottom-4 before:w-1 before:bg-[#E0E5F2] before:-z-10">
+                    <!-- Javascript populates this visual timeline -->
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 bg-white border-t border-brandGray flex justify-between items-center z-10">
+                <button
+                    class="flex items-center gap-2 text-textMuted hover:text-brandBlue font-bold px-4 py-2 rounded-xl transition-colors">
+                    <i class="fa-brands fa-google text-lg"></i> Sync to Calendar
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="closeModal()"
+                        class="px-6 py-3 text-textMuted font-bold hover:bg-[#F4F7FE] rounded-2xl transition">Cancel</button>
+                    <button onclick="acceptPlan()"
+                        class="px-8 py-3 bg-brandPurple hover:bg-[#3412cb] text-white font-black rounded-2xl shadow-glow-purple transition flex items-center gap-2">
+                        Start Focus Mode <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <!-- AI Tutor Modal overlay -->
+    <div id="aiTutorModal"
+        class="fixed inset-0 z-50 flex flex-col items-center justify-end sm:justify-center px-4 pb-4 sm:p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="fixed inset-0 bg-[#0F0A18]/80 backdrop-blur-md" onclick="closeAITutorModal()"></div>
+
+        <div id="aiTutorModalInner"
+            class="bg-cardBg border-2 border-brandGray rounded-3xl w-full max-w-2xl relative z-10 scale-95 transition-transform duration-300 shadow-glow-violet overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 sm:p-6 border-b border-brandGray flex justify-between items-center bg-bgMain shrink-0">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FF00A6] to-brandViolet flex items-center justify-center shadow-glow-violet">
+                        <i class="fa-solid fa-brain text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-display font-bold text-textMain leading-tight">StudyAI Tutor</h3>
+                        <p class="text-xs font-semibold text-brandVioletLight" id="aiTutorStatus">Online and ready</p>
+                    </div>
+                </div>
+                <button onclick="closeAITutorModal()"
+                    class="w-8 h-8 rounded-full bg-cardBg text-textMuted hover:text-white flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar" id="aiTutorChatHistory">
+                <!-- Chat messages go here -->
+            </div>
+
+            <div class="p-4 border-t border-brandGray bg-bgMain shrink-0 flex gap-2 items-end">
+                <div
+                    class="flex-1 bg-cardBg rounded-2xl border border-brandGray focus-within:border-brandViolet focus-within:ring-1 focus-within:ring-brandViolet transition-all relative">
+                    <textarea id="aiTutorInput" rows="1"
+                        class="w-full bg-transparent border-none px-4 py-3 font-medium text-textMain placeholder-textMuted focus:outline-none resize-none overflow-hidden block"
+                        placeholder="Ask me anything..."
+                        oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
+                </div>
+                <button onclick="sendAITutorMessage()"
+                    class="w-12 h-12 bg-brandViolet hover:bg-[#3412cb] text-white rounded-2xl flex items-center justify-center shrink-0 transition-colors shadow-glow-violet">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Upgrade Modal -->
+    <div id="premiumModal"
+        class="fixed inset-0 bg-[#0F0F13]/80 backdrop-blur-md z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+
+        <!-- Modal Content -->
+        <div id="premiumModalInner"
+            class="card-bubbly bg-cardBg w-full max-w-lg border-2 border-brandViolet shadow-[0_0_50px_rgba(138,43,226,0.3)] relative transform scale-95 transition-transform duration-300 overflow-hidden">
+
+            <!-- Close Button -->
+            <button onclick="closePremiumModal()"
+                class="absolute top-4 right-4 w-8 h-8 bg-black/20 text-textMuted hover:text-white rounded-full flex items-center justify-center transition-colors z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Decorative Header Gradient -->
+            <div class="h-32 bg-gradient-to-br from-brandViolet via-brandPink to-[#FF9900] relative">
+                <div class="absolute inset-0 bg-white/10"
+                    style="background-image: radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 20px 20px;">
+                </div>
+                <div class="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                    <div
+                        class="w-20 h-20 bg-cardBg rounded-full border-4 border-cardBg flex items-center justify-center shadow-glow-violet">
+                        <i class="fa-solid fa-crown text-3xl text-yellow-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 pt-14 text-center">
+                <h2 class="text-3xl font-display font-black text-white mb-2">Upgrade to Pro</h2>
+                <p class="text-textMuted text-sm mb-8 font-medium">Unlock your full potential with these exclusive AI
+                    study features.</p>
+
+                <div class="space-y-4 text-left mb-8">
+                    <div
+                        class="flex items-start gap-4 p-3 rounded-xl hover:bg-bgMain border border-transparent hover:border-brandGray transition-colors">
+                        <div
+                            class="w-10 h-10 rounded-full bg-brandVioletLight/20 text-brandVioletLight flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-sm">Unlimited AI Tutor</h4>
+                            <p class="text-xs text-textMuted font-medium">Get 24/7 personalized explanations and
+                                quizzes.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex items-start gap-4 p-3 rounded-xl hover:bg-bgMain border border-transparent hover:border-brandGray transition-colors">
+                        <div
+                            class="w-10 h-10 rounded-full bg-brandPink/20 text-brandPink flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-sm">Advanced Analytics</h4>
+                            <p class="text-xs text-textMuted font-medium">Deep insights into your learning curve and
+                                memory retention.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex items-start gap-4 p-3 rounded-xl hover:bg-bgMain border border-transparent hover:border-brandGray transition-colors">
+                        <div
+                            class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-sm">Strict Focus Mode</h4>
+                            <p class="text-xs text-textMuted font-medium">Hardcore website blocking to eliminate
+                                distractions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="closePremiumModal()"
+                        class="flex-1 py-3 px-6 rounded-xl font-bold bg-bgMain text-textMuted hover:text-white border border-brandGray hover:border-textMuted transition-colors">
+                        Maybe Later
+                    </button>
+                    <button onclick="showToast('Redirecting to secure checkout...'); closePremiumModal();"
+                        class="flex-[2] py-3 px-6 rounded-xl font-bold bg-gradient-to-r from-brandViolet to-brandPink text-white shadow-glow-violet hover:opacity-90 transition-opacity">
+                        Upgrade for $9.99/mo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
