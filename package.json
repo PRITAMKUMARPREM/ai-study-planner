@@ -1,11 +1,11 @@
 {
   "name": "ai-study-planner",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron .",
-    "build": "electron-builder"
+    "start": "node server.js",
+    "build": "echo 'no build needed'"
   },
   "keywords": [],
   "author": "",
