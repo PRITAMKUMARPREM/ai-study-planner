@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: ai-study-planner
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # This will prompt you to enter the key during deployment
